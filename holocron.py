@@ -14,16 +14,14 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 
-imaplib._MAXLINE = 10000000
-
-context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-imapObj = imapclient.IMAPClient('imap.gmail.com', ssl=True, ssl_context=context)
-
 # email_username = input("Username? ")
 # email_password = input("Password? ")
 email_username = 'io.holocron'
 email_password = 'OPGfPcz62H4T'
 
+imaplib._MAXLINE = 10000000
+context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+imapObj = imapclient.IMAPClient('imap.gmail.com', ssl=True, ssl_context=context)
 imapObj.login(email_username, email_password)
 smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
 smtpObj.ehlo()
