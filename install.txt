@@ -1,0 +1,32 @@
+Installation Instructions:
+_______________________________________________________________________________
+
+1.  Visit https://oilfurnace.slack.com/apps/new/A0F7YS25R-bots and set up a new
+	bot profile.  The name can be whatever, as long as it's unique to previously
+	chosen bot names.  Make it memorable if you want.  Copy the name from the 
+	box on the slack page and paste it on line 1 (line 0 in python speak) of 
+	config.txt.  Then go back to the page and hit "Add Bot Integration"
+
+2.  Copy the API token from the next page, and place this on line 3 (line 2 in 
+	python speak) of config.txt and save and close it.
+
+3.  Choose a unique icon for your bot if you want.  Doesn't really matter, but 
+	helps to distinguish between bots I guess.  Then scroll down to
+	"Save Integration"
+
+4.  Next, run print_bot_id.py from the command line.  It will pull the API token
+	and the bot name from config.txt and return a bot UID.  Copy the UID from 
+	the command line and paste it on line 2 (line 1 in python speak) of
+	config.txt.
+
+5.  Before closing config.txt, make sure that line 6 (line 5 in python) matches
+	the path to your copy of "NiceHash Miner 2.exe".  By default, this is 
+	C:/Program Files/NiceHash Miner 2/NiceHash Miner 2.exe, and that's what is
+	in the default config.txt file.
+
+7.  Go to the rig_monitor channel on Slack, and invite your new bot user.
+
+6.  Run holocron_slack.py from the command line.  If everything is set up right,
+	it should start printing out to the command line.  Look for the line 
+	"holocron established connection with slack", and then go to the rig_monitor
+	channel and wait for the checkin message from the bot.

@@ -7,17 +7,16 @@ from pywinauto.findwindows import find_window
 from pywinauto.win32functions import SetForegroundWindow
 from pywinauto import MatchError
 from PIL import ImageGrab
-import websocket
-websocket.enableTrace(True)
 
 config = open('config.txt', 'r')
 lines = config.readlines()  # get the data for the local bot version - the items in config.txt will vary between different installations
 """
-line 0:  bot UID from the Slack API, you can find this by providing print_bot_id.py with the API Token from Slack.
-line 1:  Bot API token, unique for each bot, needed to connect to the Slack API network.
-line 2:  email account name for legacy version of holocron.
-line 3:  email password for legacy version of holocron.
-line 4:  file path for NiceHash Miner 2.exe
+line 0:  bot name in plaintext, required only for initial setup.
+line 1:  bot UID from the Slack API, you can find this by providing print_bot_id.py with the API Token from Slack.
+line 2:  Bot API token, unique for each bot, needed to connect to the Slack API network.
+line 3:  email account name for legacy version of holocron.
+line 4:  email password for legacy version of holocron.
+line 5:  file path for NiceHash Miner 2.exe
 """
 
 config.close()
@@ -26,11 +25,9 @@ new_lines = []
 for line in lines:
     new_lines.append(line[:-1])  # pop off that pesky newline escape character
 lines = new_lines
-for line in lines:
-    print(line)
 
-slack_client = SlackClient(lines[1])
-bot_id = lines[0]
+bot_id = lines[1]
+slack_client = SlackClient(lines[2])
 
 DEFAULT_CHANNEL = 'C895B0JDT'  # default channel ID for rig monitor output
 NH_WINDOW_W = 630  # fixed window width for NiceHash Miner
@@ -67,6 +64,7 @@ def handle_command(command, channel):
         if send_screenshot():
             slack_client.api_call("chat.postMessage", channel=channel,
                                   text="Here's that screencap.", as_user=True)
+            return
         slack_client.api_call("chat.postMessage", channel=channel,
                               text="NiceHash Miner is not running!", as_user=True)
 
@@ -114,7 +112,6 @@ def send_screenshot():
         x, y, a, b = pyautogui.locateOnScreen('ir_sample/nicehash_header.png')
         ImageGrab.grab(bbox=(x - 1, y, x - 1 + NH_WINDOW_W, y + NH_WINDOW_H)).save("screenshots/{0}.png".format(date_string), "PNG")
     if not nicehash_exe_running():
-        print("debug A")
         return
     date = datetime.datetime.now()
     date_string = date.strftime("{0}-{1}-{2}_{3}{4}".format(date.month,
@@ -181,7 +178,7 @@ def start_nicehash():
 
     print("Starting NiceHash miner 2 exe.")
     if not nicehash_exe_running():
-        subprocess.Popen(lines[4])  # this will depend on where you have nhm installed
+        subprocess.Popen(lines[5])  # this will depend on where you have nhm installed
         time.sleep(60)  # delay to let nicehash miner 2 boot up, probably overkill, but whatever
     check_for_hardware_warning()
     check_for_start_button()
