@@ -7,6 +7,7 @@ from PIL import ImageGrab
 import datetime
 import smtplib
 import os
+import pyautogui
 from pywinauto.findwindows import find_window
 from pywinauto.win32functions import SetForegroundWindow
 
@@ -16,8 +17,8 @@ from email.mime.image import MIMEImage
 
 # email_username = input("Username? ")
 # email_password = input("Password? ")
-email_username = 'io.holocron'
-email_password = 'OPGfPcz62H4T'
+email_username = lines[2][0:-1]
+email_password = lines[3][0:-1]
 
 imaplib._MAXLINE = 10000000
 context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
@@ -76,7 +77,8 @@ def fetch_address(message):
 def send_screenshot(message):
     def take_screenshot(date_string):
         SetForegroundWindow(find_window(best_match='NiceHash'))
-        ImageGrab.grab().save("screenshots/{0}.png".format(date_string), "PNG")
+        x, y, a, b = pyautogui.locateOnScreen('ir_sample/nicehash_header.png')
+        ImageGrab.grab(bbox=(x - 1, y, x -1 + NH_WINDOW_W, y + NH_WINDOW_H)).save("screenshots/{0}.png".format(date_string), "PNG")
 
     date = datetime.datetime.now()
     date_string = date.strftime("{0}-{1}-{2}_{3}{4}".format(date.month,
