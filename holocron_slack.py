@@ -7,7 +7,8 @@ from pywinauto.findwindows import find_window
 from pywinauto.win32functions import SetForegroundWindow
 from pywinauto import MatchError
 from PIL import ImageGrab
-
+import websocket
+websocket.enableTrace(True)
 
 config = open('config.txt', 'r')
 lines = config.readlines()  # get the data for the local bot version - the items in config.txt will vary between different installations
@@ -25,6 +26,8 @@ new_lines = []
 for line in lines:
     new_lines.append(line[:-1])  # pop off that pesky newline escape character
 lines = new_lines
+for line in lines:
+    print(line)
 
 slack_client = SlackClient(lines[1])
 bot_id = lines[0]
@@ -222,7 +225,6 @@ if __name__ == "__main__":
         while True:
             command, channel = parse_slack_output(slack_client.rtm_read())
             if command and channel:
-                print(channel)
                 handle_command(command, channel)
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
