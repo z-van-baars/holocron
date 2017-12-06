@@ -65,10 +65,11 @@ def handle_command(command, channel):
             slack_client.api_call("chat.postMessage", channel=channel,
                                   text="Here's that screencap.", as_user=True)
             return
-        slack_client.api_call("chat.postMessage", channel=channel,
-                              text="NiceHash Miner is not running!", as_user=True)
+        else:
+            slack_client.api_call("chat.postMessage", channel=channel,
+                                  text="NiceHash Miner is not running!", as_user=True)
 
-        return
+            return
     elif command.startswith(commands):
         response = "`do`  Example command; does nothing.\n"
         response += "`commands`  Displays a list of commands and their functions.\n"
@@ -112,7 +113,7 @@ def send_screenshot():
         x, y, a, b = pyautogui.locateOnScreen('ir_sample/nicehash_header.png')
         ImageGrab.grab(bbox=(x - 1, y, x - 1 + NH_WINDOW_W, y + NH_WINDOW_H)).save("screenshots/{0}.png".format(date_string), "PNG")
     if not nicehash_exe_running():
-        return
+        return False
     date = datetime.datetime.now()
     date_string = date.strftime("{0}-{1}-{2}_{3}{4}".format(date.month,
                                                             date.day,
@@ -124,6 +125,7 @@ def send_screenshot():
                           channels=channel,
                           filename='{0}.png'.format(date_string),
                           file=open('screenshots/{0}.png'.format(date_string), 'rb'))
+    return True
 
 
 def checkin():
