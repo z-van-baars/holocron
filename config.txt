@@ -1,6 +1,7 @@
-angkorwat
-U89J6MCCT
-xoxb-281618726435-KefnXEMXHm7ax2YaoIQWAVnb
+-null- bot name here -null-
+-null- bot id here -null-
+-null- slack API token here -null-
 io.holocron
 -null-
 C:/Program Files/NiceHash Miner 2/NiceHash Miner 2.exe
+E:/Program Files (x86)/Vertcoin One-Click Miner/Vertcoin One-Click Miner.exe

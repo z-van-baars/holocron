@@ -17,7 +17,6 @@ line 2:  Bot API token, unique for each bot, needed to connect to the Slack API 
 line 3:  email account name for legacy version of holocron.
 line 4:  email password for legacy version of holocron.
 line 5:  file path for NiceHash Miner 2.exe
-line 6:  File path for Vertcoin OCM exe
 """
 
 config.close()
@@ -33,8 +32,6 @@ slack_client = SlackClient(lines[2])
 DEFAULT_CHANNEL = 'C895B0JDT'  # default channel ID for rig monitor output
 NH_WINDOW_W = 630  # fixed window width for NiceHash Miner
 NH_WINDOW_H = 440  # fixed window height
-OCM_WINDOW_W = 434
-OCM_WINDOW_H = 335
 
 at_bot = '<@' + bot_id + '>'  # bot UID as output by Slack API - stream of digits enclosed by carrot brackets -- <@123456>
 
@@ -48,73 +45,6 @@ stop = "stop"
 close = "close"
 shutdown = "shutdown"
 reboot = "reboot"
-
-mining_exe_selected = False
-while not mining_exe_selected:
-    active_mining_exe = (input("Start in which mode? (N)iceHash, (V)ertcoin: ")).lower()
-    print(active_mining_exe)
-    if active_mining_exe == "v" or active_mining_exe == "n":
-        mining_exe_selected = True
-        if active_mining_exe == "v":
-            print("Vertcoin mining software selected.")
-        elif active_mining_exe == "n":
-            print("Nicehash mining software selected.")
-    else:
-        print("please input selection again.")
-
-
-class MinerExe(object):
-    def __init__(self,
-                 name,
-                 window_width,
-                 window_height,
-                 process_name,
-                 start_offset,
-                 stop_offset,
-                 close_offset,
-                 dir_name,
-                 process_path):
-        self.name = name
-        self.window_width = window_width
-        self.window_height = window_height
-        self.process_name = process_name
-        self.start_offset = start_offset
-        self.stop_offset = stop_offset
-        self.close_offset = close_offset
-        self.dir_name = dir_name
-        self.process_path = process_path
-
-
-class VertCoinOCM(MinerExe):
-    def __init__(self):
-        super().__init__("Vertcoin OCM",
-                         434,  # miner ui window width
-                         335,  # miner ui window height
-                         "Vertcoin OCM",
-                         (23, 20),  # start offset
-                         (23, 21),  # stop offset
-                         (67, 25),  # close offset
-                         "vertcoin",
-                         lines[6])  # exe path
-
-
-class NiceHash(MinerExe):
-    def __init__(self):
-        super().__init__("NiceHash Miner",
-                         630,  # miner ui window width
-                         440,  # miner ui window height
-                         "NiceHash Miner",
-                         (36, 36),  # start offset
-                         (30, -60),  # stop offset
-                         (62, 27),  # close offset
-                         "nicehash",
-                         lines[5])  # exe path
-
-
-if active_mining_exe == "v":
-    active_miner_exe = VertCoinOCM()
-elif active_mining_exe == "n":
-    active_miner_exe = NiceHash()
 
 
 def handle_command(command, channel):
@@ -131,37 +61,37 @@ def handle_command(command, channel):
         response = "Sure...write some more code then I can do that!"
     elif command.startswith(screencap):
 
-        if send_screenshot(active_miner_exe):
+        if send_screenshot():
             slack_client.api_call("chat.postMessage", channel=channel,
                                   text="Here's that screencap.", as_user=True)
             return
         else:
             slack_client.api_call("chat.postMessage", channel=channel,
-                                  text="{0} is not running!", as_user=True)
+                                  text="NiceHash Miner is not running!", as_user=True)
 
             return
     elif command.startswith(commands):
         response = "`do`  Example command; does nothing.\n"
         response += "`commands`  Displays a list of commands and their functions.\n"
-        response += "`screencap`  Brings the Miner window to the front, and uploads a screen capture to the channel.\n"
-        response += "`start`  *Starts* Miner if it's closed, and starts it mining if it's stopped.\n"
-        response += "`stop` *Stops* Miner if it is open / mining.\n"
-        response += "`close`  *Closes* Miner\n"
+        response += "`screencap`  Brings the NiceHash Miner window to the front, and uploads a screen capture to the channel.\n"
+        response += "`start`  *Starts* NiceHash Miner if it's closed, and starts it mining if it's stopped.\n"
+        response += "`stop` *Stops* NiceHash Miner if it is open / mining.\n"
+        response += "`close`  *Closes* NiceHash Miner\n"
         response += "`shutdown`  *Shutdown* the PC.  *NO WAY TO REMOTE RESTART.*\n"
         response += "`reboot`  *Reboot* the PC."
     elif command.startswith(start):
-        start_miner(active_miner_exe)
-        response = "{0} started.".format(active_miner_exe.name)
+        start_nicehash()
+        response = "NiceHash Miner started."
     elif command.startswith(stop):
-        running = stop_miner(active_miner_exe)
-        response = "{0} not running!".format(active_miner_exe.name)
+        running = stop_nicehash()
+        response = "NiceHash Miner not running!"
         if running:
-            response = "{0} stopped."
+            response = "NiceHash Miner stopped."
     elif command.startswith(close):
-        running = terminate_miner(active_miner_exe)
-        response = "{0} terminated.".format(active_miner_exe.name)
+        running = terminate_nicehash()
+        response = "NiceHash Miner terminated."
         if not running:
-            response = "{0} not running.".format(active_miner_exe.name)
+            response = "NiceHash Miner not running."
     elif command.startswith(shutdown):
         slack_client.api_call("chat.postMessage", channel=channel,
                               text="Shutting down...", as_user=True)
@@ -177,15 +107,12 @@ def handle_command(command, channel):
                           text=response, as_user=True)
 
 
-def send_screenshot(active_miner_exe):
-    def take_screenshot(date_string, active_miner_exe):
-        SetForegroundWindow(find_window(best_match=active_miner_exe.process_name))
-        x, y, a, b = pyautogui.locateOnScreen('ir_sample/{0}/header.png'.format(active_miner_exe.dir_name))
-        ImageGrab.grab(bbox=(x,
-                             y,
-                             x - 1 + active_miner_exe.window_width,
-                             y + active_miner_exe.window_height)).save("screenshots/{0}.png".format(date_string), "PNG")
-    if not miner_exe_running(active_miner_exe.process_name):
+def send_screenshot():
+    def take_screenshot(date_string):
+        SetForegroundWindow(find_window(best_match='NiceHash'))
+        x, y, a, b = pyautogui.locateOnScreen('ir_sample/nicehash_header.png')
+        ImageGrab.grab(bbox=(x - 1, y, x - 1 + NH_WINDOW_W, y + NH_WINDOW_H)).save("screenshots/{0}.png".format(date_string), "PNG")
+    if not nicehash_exe_running():
         return False
     date = datetime.datetime.now()
     date_string = date.strftime("{0}-{1}-{2}_{3}{4}".format(date.month,
@@ -193,7 +120,7 @@ def send_screenshot(active_miner_exe):
                                                             date.year,
                                                             date.hour,
                                                             date.minute))
-    take_screenshot(date_string, active_miner_exe)
+    take_screenshot(date_string)
     slack_client.api_call('files.upload',
                           channels=channel,
                           filename='{0}.png'.format(date_string),
@@ -201,69 +128,62 @@ def send_screenshot(active_miner_exe):
     return True
 
 
-def terminate_miner(active_miner_exe):
-    print("Terminating {0} process.".format(active_miner_exe.process_name))
-    found = pyautogui.locateOnScreen('ir_sample/{0}/close.png'.format(active_miner_exe.dir_name))
+def checkin():
+    checkin_greeting = at_bot + "online!"
+    slack_client.api_call("chat.postMessage", channel=DEFAULT_CHANNEL,
+                          text=checkin_greeting, as_user=True)
+
+
+def terminate_nicehash():
+    print("Terminating NiceHash process.")
+    found = pyautogui.locateOnScreen('ir_sample/close.png')
     if found:
         x, y, a, b = found
-        pyautogui.click(x + active_miner_exe.exit_offset[0], y + active_miner_exe.exit_offset[1])
+        pyautogui.click(x + 62, y + 27)
         return True
     return False
 
 
-def stop_miner(active_mining_exe):
+def stop_nicehash():
     print("searching for stop button...")
-    if miner_exe_running(active_miner_exe.process_name):
-        found = pyautogui.locateOnScreen('ir_sample/{0}/stop.png')
+    if nicehash_exe_running():
+        found = pyautogui.locateOnScreen('ir_sample/stop.png')
         if found:
             x, y, a, b = found
-            pyautogui.click(x + active_miner_exe.stop_offset[0], y + active_miner_exe.stop_offset[1])
+            pyautogui.click(x + 30, y - 60)
             return True
     return False
 
 
-def miner_exe_running(process_name):
+def nicehash_exe_running():
     try:
-        SetForegroundWindow(find_window(best_match=process_name))
+        SetForegroundWindow(find_window(best_match='NiceHash'))
     except MatchError:
         return False
     return True
 
 
-def start_miner(active_miner_exe):
-    def check_for_hardware_warning(active_miner_exe):
+def start_nicehash():
+    def check_for_hardware_warning():
         print("searching for hardware warning...")
-        found = pyautogui.locateOnScreen('ir_sample/{0}/dismiss.png'.format(active_miner_exe.dir_name))
+        found = pyautogui.locateOnScreen('ir_sample/dismiss.png')
         if found:
             x, y, a, b = found
             pyautogui.click(x + 20, y + 10)
 
-    def check_for_start_button(active_miner_exe):
+    def check_for_start_button():
         print("searching for start button...")
-        print('ir_sample/{0}/start.png'.format(active_miner_exe.dir_name))
-        found = pyautogui.locateOnScreen('ir_sample/{0}/start.png'.format(active_miner_exe.dir_name))
+        found = pyautogui.locateOnScreen('ir_sample/start.png')
         if found:
-            print("found the button")
             x, y, a, b = found
-            pyautogui.click(x + active_miner_exe.start_offset[0], y + active_miner_exe.start_offset[1])
-        else:
-            print("did not found the button")
+            pyautogui.click(x + 36, y + 36)
 
-    print(active_miner_exe.process_name)
-    print("Starting {0}".format(active_miner_exe.process_name))
-    if not miner_exe_running(active_miner_exe.process_name):
-        subprocess.Popen(active_miner_exe.process_path)  # this will depend on where you have your mining software installed
-        time.sleep(5)  # delay to let miner exe boot, probably overkill, but whatever
-    SetForegroundWindow(find_window(best_match=active_miner_exe.process_name))
-    if active_mining_exe == "n":
-        check_for_hardware_warning()
-    check_for_start_button(active_miner_exe)
-
-
-def checkin():
-    checkin_greeting = at_bot + "online!"
-    slack_client.api_call("chat.postMessage", channel=DEFAULT_CHANNEL,
-                          text=checkin_greeting, as_user=True)
+    print("Starting NiceHash miner 2 exe.")
+    if not nicehash_exe_running():
+        subprocess.Popen(lines[5])  # this will depend on where you have nhm installed
+        time.sleep(60)  # delay to let nicehash miner 2 boot up, probably overkill, but whatever
+    check_for_hardware_warning()
+    check_for_start_button()
 
 
 def reboot_system():
