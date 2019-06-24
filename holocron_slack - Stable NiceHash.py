@@ -46,7 +46,6 @@ close = "close"
 shutdown = "shutdown"
 reboot = "reboot"
 
-
 def handle_command(command, channel):
     """
         Receives commands directed at the bot and determines if they

@@ -91,8 +91,8 @@ class VertCoinOCM(MinerExe):
                          434,  # miner ui window width
                          335,  # miner ui window height
                          "Vertcoin OCM",
-                         (23, 20),  # start offset
-                         (23, 21),  # stop offset
+                         (23, 10),  # start offset
+                         (23, 10),  # stop offset
                          (67, 25),  # close offset
                          "vertcoin",
                          lines[6])  # exe path
@@ -156,7 +156,7 @@ def handle_command(command, channel):
         running = stop_miner(active_miner_exe)
         response = "{0} not running!".format(active_miner_exe.name)
         if running:
-            response = "{0} stopped."
+            response = "{0} stopped.".format(active_miner_exe.name)
     elif command.startswith(close):
         running = terminate_miner(active_miner_exe)
         response = "{0} terminated.".format(active_miner_exe.name)
@@ -214,7 +214,7 @@ def terminate_miner(active_miner_exe):
 def stop_miner(active_mining_exe):
     print("searching for stop button...")
     if miner_exe_running(active_miner_exe.process_name):
-        found = pyautogui.locateOnScreen('ir_sample/{0}/stop.png')
+        found = pyautogui.locateOnScreen('ir_sample/{0}/stop.png'.format(active_miner_exe.dir_name))
         if found:
             x, y, a, b = found
             pyautogui.click(x + active_miner_exe.stop_offset[0], y + active_miner_exe.stop_offset[1])
